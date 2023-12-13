@@ -1,0 +1,39 @@
+{
+  "name": "discordjs-v14-template",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ByDexterTR/discordjs-v14-template.git"
+  },
+  "keywords": [
+    "discord",
+    "discordjs",
+    "discordv14",
+    "v14",
+    "discord-v14",
+    "discordjsv14",
+    "discordjs-v14",
+    "discord.jsv14",
+    "discord.js",
+    "template",
+    "altyapi",
+    "discordaltyapi",
+    "discord-altyapi-discord-template"
+  ],
+  "author": "ByDexter",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ByDexterTR/discordjs-v14-template/issues"
+  },
+  "homepage": "https://github.com/ByDexterTR/discordjs-v14-template#readme",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "discord.js": "^14.14.1",
+    "fs": "^0.0.1-security"
+  }
+}
