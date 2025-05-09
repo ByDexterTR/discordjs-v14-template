@@ -1,52 +1,87 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } = require('discord.js');
-const axios = require('axios');
+const superagent = require('superagent');
 const { steam_apikey } = require('./../config.json');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('steam')
     .setDescription('Shows Steam user information')
-    .addStringOption(option => option.setName('url').setDescription('Enter a steam vanity url'))
-    .addStringOption(option => option.setName('id').setDescription('Enter a steam id'))
+    .addStringOption(option => option.setName('url').setDescription('Enter a Steam vanity URL or username'))
+    .addStringOption(option => option.setName('id').setDescription('Enter a Steam64 ID'))
     .setDMPermission(false),
   execute: async (interaction) => {
+    if (!steam_apikey) {
+      return await interaction.reply({ content: 'Steam API Key is not configured. Please contact the administrator.', ephemeral: true });
+    }
+
     const vanityurl = interaction.options.getString('url');
     const id = interaction.options.getString('id');
-    if (!vanityurl && !id) return await interaction.reply({ content: 'Invalid steam vanity url or steam id.', ephemeral: true });
-    if (id && isNaN(id)) return await interaction.reply({ content: 'Invalid steam id.', ephemeral: true });
+    let steamId;
+
+    if (!vanityurl && !id) {
+      return await interaction.reply({
+        content: 'Please provide either a Steam vanity URL, username, or a Steam64 ID. Example: `/steam url:ByDexterTR` or `/steam id:76561198000000000`.',
+        ephemeral: true,
+      });
+    }
+
+    if (vanityurl) {
+      const matchVanity = vanityurl.match(/https:\/\/steamcommunity\.com\/(?:id|profiles)\/([^/]+)/);
+      const identifier = matchVanity ? matchVanity[1] : vanityurl;
+
+      const response = await superagent.get(`https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/`)
+        .query({ key: steam_apikey, vanityurl: identifier });
+      steamId = response.body.response.steamid;
+
+      if (!steamId) {
+        return await interaction.reply({ content: 'Invalid Steam vanity URL or username.', ephemeral: true });
+      }
+    } else if (id) {
+      const matchId = id.match(/^\d{17}$/);
+      if (matchId) {
+        steamId = id;
+      } else {
+        return await interaction.reply({ content: 'Invalid Steam64 ID. Please provide a valid 17-digit Steam64 ID.', ephemeral: true });
+      }
+    }
+
     try {
-      let steamId;
+      const steam = await superagent.get(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/`)
+        .query({ key: steam_apikey, steamids: steamId });
+      const player = steam.body.response.players[0];
 
-      if (vanityurl) {
-        const response = await axios.get(`https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key=${steam_apikey}&vanityurl=${vanityurl}`);
-        steamId = response.data.response.steamid;
-        if (steamId === undefined) return await interaction.reply({ content: 'Invalid steam vanity url.', ephemeral: true });
-      } else steamId = id;
+      if (!player) {
+        return await interaction.reply({ content: 'No player found for the provided Steam ID.', ephemeral: true });
+      }
 
-      const steam = await axios.get(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${steam_apikey}&steamids=${steamId}`);
-      const player = steam.data.response.players[0];
+      const created = player.timecreated ? `<t:${player.timecreated}:R>` : 'Private';
+      const comments = player.commentpermission === 1 ? 'All' : player.commentpermission === 2 ? 'Private' : 'Friend';
 
-      if (!player || player.steamid === undefined) return await interaction.reply({ content: 'Invalid steam id.', ephemeral: true });
+      const status = {
+        0: 'Offline',
+        1: 'Online',
+        2: 'Busy',
+        3: 'Away',
+        4: 'Snooze',
+        5: 'Looking to Trade',
+        6: 'Looking to Play',
+      }[player.personastate] || 'Unknown';
 
-      const created = player.timecreated === undefined ? 'Private' : `<t:${player.timecreated}:R>`;
-      const last = player.lastlogoff === undefined ? 'Private' : `<t:${player.lastlogoff}:R>`;
-
-      let comments;
-      if (player.commentpermission === 1) comments = 'All';
-      else if (player.commentpermission === 2) comments = 'Private';
-      else comments = 'Friend';
+      const country = player.loccountrycode ? `:flag_${player.loccountrycode.toLowerCase()}: ${player.loccountrycode}` : 'Unknown';
+      const game = player.gameextrainfo ? player.gameextrainfo : 'Not playing';
 
       const Embed = new EmbedBuilder()
         .setColor('Random')
-        .setTitle(`:flag_${player.loccountrycode === undefined ? 'black' : player.loccountrycode.toLowerCase()}: ${player.personaname}'s Information`)
+        .setTitle(`${player.personaname}'s Information`)
         .setThumbnail(player.avatarfull)
         .addFields(
-          { name: '👤 Name', value: `${player.personaname === undefined ? 'unnamed' : player.personaname}`, inline: true },
-          { name: '📅 Created On', value: `${created}`, inline: true },
-          { name: '🌐 ID', value: `${steamId}`, inline: true },
-          { name: '💬 Comments', value: `${comments}`, inline: true },
-          { name: '⏱️ Last Login', value: `${last}`, inline: true },
-          { name: '🕹 Game', value: `${player.gameextrainfo === undefined ? 'Idle' : player.gameextrainfo}`, inline: true },
+          { name: '👤 Name', value: player.personaname || 'Unnamed', inline: true },
+          { name: '📅 Created On', value: created, inline: true },
+          { name: '🌐 ID', value: steamId, inline: true },
+          { name: '💬 Comments', value: comments, inline: true },
+          { name: '📡 Status', value: status, inline: true },
+          { name: '🌍 Country', value: country, inline: true },
+          { name: '🎮 Currently Playing', value: game, inline: true },
         )
         .setTimestamp()
         .setFooter({ text: interaction.user.username, iconURL: interaction.user.displayAvatarURL() });
@@ -59,9 +94,8 @@ module.exports = {
       const row = new ActionRowBuilder().addComponents(Button);
       await interaction.reply({ embeds: [Embed], components: [row] });
     } catch (error) {
-      console.error('ERROR:', error.response ? error.response.data : error.message);
-      if (error.response.data === '<html><head><title>Forbidden</title></head><body><h1>Forbidden</h1>Access is denied. Retrying will not help. Please verify your <pre>key=</pre> parameter.</body></html>') return await interaction.reply({ content: 'Invalid Steam Api Key.', ephemeral: true });
-      return await interaction.reply({ content: 'Invalid steam id.', ephemeral: true });
+      console.error('ERROR:', error.response ? error.response.text : error.message);
+      await interaction.reply({ content: 'An error occurred while fetching Steam data. Please try again later.', ephemeral: true });
     }
   },
 };

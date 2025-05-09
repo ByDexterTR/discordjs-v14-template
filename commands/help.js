@@ -6,22 +6,18 @@ module.exports = {
     .setDescription('Shows all commands')
     .setDMPermission(false),
   execute: async (interaction) => {
+    const commandsList = interaction.client.commands.map(command => {
+      return `- \`/${command.data.name}\` **${command.data.description}**`;
+    }).join('\n');
+
     const Embed = new EmbedBuilder()
       .setColor('Random')
       .setTitle(`${interaction.client.user.username}'s Commands`)
-      .setDescription(
-        '### 📁 General\n' +
-        '- `/avatar` **Gets a user avatar**\n' +
-        '- `/help` **Shows all commands**\n' +
-        '- `/server` **Shows server information**\n' +
-        '- `/steam` **Shows Steam user information**\n' +
-        '### 💼 Admin\n' +
-        '- `/clear` **Clears message to channel**\n' +
-        '- `/embed` **Send Embed to the channel**\n'
-      )
+      .setDescription(commandsList)
       .setThumbnail(interaction.client.user.displayAvatarURL())
       .setTimestamp()
       .setFooter({ text: interaction.user.username, iconURL: interaction.user.displayAvatarURL() });
+
     await interaction.reply({ embeds: [Embed] });
   },
 };

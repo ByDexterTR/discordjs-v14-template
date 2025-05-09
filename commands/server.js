@@ -15,13 +15,22 @@ module.exports = {
       .addFields(
         { name: '👑 Owner', value: `<@${guild.ownerId}>`, inline: true },
         { name: '📅 Created On', value: `<t:${Math.floor(guild.createdTimestamp / 1000)}:R>`, inline: true },
-        { name: '👤 Member', value: `${guild.memberCount} (${guild.members.cache.filter(member => member.user.bot).size} Bot)`, inline: true },
-        { name: '💠 Role', value: `${guild.roles.cache.size - 1}`, inline: true },
-        { name: '🧾 Channel', value: `${guild.channels.cache.size}`, inline: true },
+        { name: '👤 Members', value: `${guild.memberCount} (${guild.members.cache.filter(member => member.user.bot).size} Bots)`, inline: true },
+        { name: '💠 Roles', value: `${guild.roles.cache.size - 1}`, inline: true },
+        { name: '🧾 Channels', value: `${guild.channels.cache.size}`, inline: true },
         { name: '🌐 ID', value: `${guild.id}`, inline: true },
+        { name: '🚀 Boost Count', value: `${guild.premiumSubscriptionCount || 0}`, inline: true },
+        { name: '🔒 Verification Level', value: `${guild.verificationLevel}`, inline: true },
+        { name: '💤 AFK Channel', value: guild.afkChannel ? `<#${guild.afkChannel.id}>` : 'None', inline: true },
+        { name: '⏱️ AFK Timeout', value: guild.afkTimeout ? `${guild.afkTimeout / 60} minutes` : 'None', inline: true },
+        { name: '😀 Emojis', value: `${guild.emojis.cache.size}`, inline: true },
+        { name: '📋 Stickers', value: `${guild.stickers.cache.size}`, inline: true },
+        { name: '🌍 Locale', value: `${guild.preferredLocale}`, inline: true },
       )
+      .setImage(guild.bannerURL({ dynamic: true, size: 4096 }) || null)
       .setTimestamp()
       .setFooter({ text: interaction.user.username, iconURL: interaction.user.displayAvatarURL() });
+
     await interaction.reply({ embeds: [Embed] });
   },
 };

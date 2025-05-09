@@ -1,6 +1,6 @@
 {
   "token": "BOT TOKEN",
-  "client_id": "BOT ID",
-  "guild_id": "GUILD ID",
-  "steam_apikey": "STEAM DEV API KEY"
+  "client_id": "BOT CLIENT ID",
+  "guild_id": "",
+  "steam_apikey": ""
 }
