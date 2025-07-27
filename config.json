@@ -2,5 +2,5 @@
   "token": "BOT TOKEN",
   "client_id": "BOT CLIENT ID",
   "guild_id": "",
-  "steam_apikey": ""
+  "owner_id": ""
 }

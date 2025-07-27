@@ -3,8 +3,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('help')
-    .setDescription('Shows all commands')
-    .setDMPermission(false),
+    .setDescription('Shows all commands'),
   execute: async (interaction) => {
     const commandsList = interaction.client.commands.map(command => {
       return `- \`/${command.data.name}\` **${command.data.description}**`;

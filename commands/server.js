@@ -3,8 +3,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('server')
-    .setDescription('Shows server information')
-    .setDMPermission(false),
+    .setDescription('Shows server information'),
   execute: async (interaction) => {
     const guild = interaction.guild;
 

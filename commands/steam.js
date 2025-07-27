@@ -1,17 +1,17 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } = require('discord.js');
-const superagent = require('superagent');
-const { steam_apikey } = require('./../config.json');
+const { request } = require('undici');
+const path = require('path');
+const { APIKEY } = require(path.join(__dirname, '..', 'data', 'steam.json'));
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('steam')
     .setDescription('Shows Steam user information')
     .addStringOption(option => option.setName('url').setDescription('Enter a Steam vanity URL or username'))
-    .addStringOption(option => option.setName('id').setDescription('Enter a Steam64 ID'))
-    .setDMPermission(false),
+    .addStringOption(option => option.setName('id').setDescription('Enter a Steam64 ID')),
   execute: async (interaction) => {
-    if (!steam_apikey) {
-      return await interaction.reply({ content: 'Steam API Key is not configured. Please contact the administrator.', ephemeral: true });
+    if (!APIKEY) {
+      return await interaction.reply({ content: 'Steam API Key is not configured. Please contact the administrator.', flags: 64 });
     }
 
     const vanityurl = interaction.options.getString('url');
@@ -21,7 +21,7 @@ module.exports = {
     if (!vanityurl && !id) {
       return await interaction.reply({
         content: 'Please provide either a Steam vanity URL, username, or a Steam64 ID. Example: `/steam url:ByDexterTR` or `/steam id:76561198000000000`.',
-        ephemeral: true,
+        flags: 64,
       });
     }
 
@@ -29,29 +29,31 @@ module.exports = {
       const matchVanity = vanityurl.match(/https:\/\/steamcommunity\.com\/(?:id|profiles)\/([^/]+)/);
       const identifier = matchVanity ? matchVanity[1] : vanityurl;
 
-      const response = await superagent.get(`https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/`)
-        .query({ key: steam_apikey, vanityurl: identifier });
-      steamId = response.body.response.steamid;
+      const url = `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key=${APIKEY}&vanityurl=${encodeURIComponent(identifier)}`;
+      const response = await request(url);
+      const data = await response.body.json();
+      steamId = data.response.steamid;
 
       if (!steamId) {
-        return await interaction.reply({ content: 'Invalid Steam vanity URL or username.', ephemeral: true });
+        return await interaction.reply({ content: 'Invalid Steam vanity URL or username.', flags: 64 });
       }
     } else if (id) {
       const matchId = id.match(/^\d{17}$/);
       if (matchId) {
         steamId = id;
       } else {
-        return await interaction.reply({ content: 'Invalid Steam64 ID. Please provide a valid 17-digit Steam64 ID.', ephemeral: true });
+        return await interaction.reply({ content: 'Invalid Steam64 ID. Please provide a valid 17-digit Steam64 ID.', flags: 64 });
       }
     }
 
     try {
-      const steam = await superagent.get(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/`)
-        .query({ key: steam_apikey, steamids: steamId });
-      const player = steam.body.response.players[0];
+      const url = `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${APIKEY}&steamids=${steamId}`;
+      const steam = await request(url);
+      const steamJson = await steam.body.json();
+      const player = steamJson.response.players[0];
 
       if (!player) {
-        return await interaction.reply({ content: 'No player found for the provided Steam ID.', ephemeral: true });
+        return await interaction.reply({ content: 'No player found for the provided Steam ID.', flags: 64 });
       }
 
       const created = player.timecreated ? `<t:${player.timecreated}:R>` : 'Private';
@@ -94,8 +96,8 @@ module.exports = {
       const row = new ActionRowBuilder().addComponents(Button);
       await interaction.reply({ embeds: [Embed], components: [row] });
     } catch (error) {
-      console.error('ERROR:', error.response ? error.response.text : error.message);
-      await interaction.reply({ content: 'An error occurred while fetching Steam data. Please try again later.', ephemeral: true });
+      console.error('ERROR:', error.message);
+      await interaction.reply({ content: 'An error occurred while fetching Steam data. Please try again later.', flags: 64 });
     }
   },
 };

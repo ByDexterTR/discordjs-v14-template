@@ -6,8 +6,7 @@ module.exports = {
     .setDescription('Clears message to channel')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
     .addIntegerOption(option => option.setName('amount').setDescription('Amount of messages to clear.').setRequired(true))
-    .addUserOption(option => option.setName('user').setDescription('To clear user messages.').setRequired(false))
-    .setDMPermission(false),
+    .addUserOption(option => option.setName('user').setDescription('To clear user messages.').setRequired(false)),
   execute: async (interaction) => {
     const { channel, options } = interaction;
 
@@ -31,7 +30,7 @@ module.exports = {
           .setDescription(`### Successfully deleted ${messages.size} messages on ${target.username}`)
           .setTimestamp()
           .setFooter({ text: interaction.user.username, iconURL: interaction.user.displayAvatarURL() });
-        interaction.reply({ embeds: [Embed] });
+        interaction.reply({ embeds: [Embed], flags: 64 });
       })
     } else {
       await channel.bulkDelete(amount, true).then(messages => {
@@ -40,7 +39,7 @@ module.exports = {
           .setDescription(`### Successfully deleted ${messages.size} messages on the channel`)
           .setTimestamp()
           .setFooter({ text: interaction.user.username, iconURL: interaction.user.displayAvatarURL() });
-        interaction.reply({ embeds: [Embed] });
+        interaction.reply({ embeds: [Embed], flags: 64 });
       })
     }
   },

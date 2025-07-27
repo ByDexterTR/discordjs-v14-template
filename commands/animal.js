@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const superagent = require('superagent');
+const { request } = require('undici');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -28,7 +28,8 @@ module.exports = {
         const selectedAnimal = interaction.options.getString('type');
 
         try {
-            const { body } = await superagent.get(`https://api.some-random-api.com/animal/${selectedAnimal}`);
+            const response = await request(`https://api.some-random-api.com/animal/${selectedAnimal}`);
+            const body = await response.body.json();
             const embed = new EmbedBuilder()
                 .setColor('Random')
                 .setTitle(`Here's a ${selectedAnimal.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase())}!`)
@@ -40,7 +41,7 @@ module.exports = {
             await interaction.reply({ embeds: [embed] });
         } catch (error) {
             console.error(error);
-            await interaction.reply({ content: 'An error occurred while fetching the animal data.', ephemeral: true });
+            await interaction.reply({ content: 'An error occurred while fetching the animal data.', flags: 64 });
         }
     },
 };

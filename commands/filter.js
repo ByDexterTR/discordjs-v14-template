@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
-const superagent = require('superagent');
+const { request } = require('undici');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -39,8 +39,8 @@ module.exports = {
             : `https://api.some-random-api.com/canvas/filter/${filter}?avatar=${encodeURIComponent(avatarURL)}`;
 
         try {
-            const response = await superagent.get(apiURL).responseType('blob');
-            const buffer = response.body;
+            const response = await request(apiURL);
+            const buffer = Buffer.from(await response.body.arrayBuffer());
             const attachment = new AttachmentBuilder(buffer, { name: `${filter}-${user.username}.png` });
 
             const embed = new EmbedBuilder()
@@ -53,7 +53,7 @@ module.exports = {
             await interaction.reply({ embeds: [embed], files: [attachment] });
         } catch (error) {
             console.error(error);
-            await interaction.reply({ content: 'An error occurred while applying the filter. Please try again later.', ephemeral: true });
+            await interaction.reply({ content: 'An error occurred while applying the filter. Please try again later.', flags: 64 });
         }
     },
 };

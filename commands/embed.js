@@ -10,8 +10,7 @@ module.exports = {
     .addStringOption(option => option.setName('thumbnail').setDescription('Enter thumbnail URL'))
     .addStringOption(option => option.setName('image').setDescription('Enter image URL'))
     .addStringOption(option => option.setName('color').setDescription('Enter a hex color code (e.g., #ff0000)'))
-    .addChannelOption(option => option.setName('channel').setDescription('Select a channel to send the embed'))
-    .setDMPermission(false),
+    .addChannelOption(option => option.setName('channel').setDescription('Select a channel to send the embed')),
   execute: async (interaction) => {
     const title = interaction.options.getString('title');
     const description = interaction.options.getString('description');
@@ -21,15 +20,15 @@ module.exports = {
     const channelOption = interaction.options.getChannel('channel') || interaction.channel;
 
     if (thumbnailOption && !isValidUrl(thumbnailOption)) {
-      return interaction.reply({ content: 'Invalid thumbnail URL.', ephemeral: true });
+      return interaction.reply({ content: 'Invalid thumbnail URL.', flags: 64 });
     }
 
     if (imageOption && !isValidUrl(imageOption)) {
-      return interaction.reply({ content: 'Invalid image URL.', ephemeral: true });
+      return interaction.reply({ content: 'Invalid image URL.', flags: 64 });
     }
 
     if (colorOption && !/^#([0-9A-F]{3}){1,2}$/i.test(colorOption) && colorOption !== 'Random') {
-      return interaction.reply({ content: 'Invalid color code. Please provide a valid hex color code (e.g., #ff0000).', ephemeral: true });
+      return interaction.reply({ content: 'Invalid color code. Please provide a valid hex color code (e.g., #ff0000).', flags: 64 });
     }
 
     const Embed = new EmbedBuilder()
@@ -42,7 +41,7 @@ module.exports = {
       .setFooter({ text: interaction.user.username, iconURL: interaction.user.displayAvatarURL() });
 
     await channelOption.send({ embeds: [Embed] });
-    await interaction.reply({ content: `Embed has been sent to ${channelOption}.`, ephemeral: true });
+    await interaction.reply({ content: `Embed has been sent to ${channelOption}.`, flags: 64 });
   },
 };
 

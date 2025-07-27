@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const fs = require('fs');
-const dataPath = './data/autorole.json';
+const path = require('path');
+const dataPath = path.join(__dirname, '..', 'data', 'autorole.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -43,7 +44,7 @@ module.exports = {
         if (action === 'list') {
             const roles = data[guildId];
             if (roles.length === 0) {
-                return interaction.reply({ content: 'No autoroles are set for this server.', ephemeral: true });
+                return interaction.reply({ content: 'No autoroles are set for this server.', flags: 64 });
             }
 
             const embed = new EmbedBuilder()
@@ -52,37 +53,37 @@ module.exports = {
                 .setDescription(roles.map(roleId => `<@&${roleId}>`).join('\n'))
                 .setTimestamp();
 
-            return interaction.reply({ embeds: [embed], ephemeral: true });
+            return interaction.reply({ embeds: [embed], flags: 64 });
         }
 
         if (action === 'add') {
             if (!role) {
-                return interaction.reply({ content: 'You must specify a role to add.', ephemeral: true });
+                return interaction.reply({ content: 'You must specify a role to add.', flags: 64 });
             }
 
             if (data[guildId].includes(role.id)) {
-                return interaction.reply({ content: 'This role is already set as an autorole.', ephemeral: true });
+                return interaction.reply({ content: 'This role is already set as an autorole.', flags: 64 });
             }
 
             data[guildId].push(role.id);
             fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 
-            return interaction.reply({ content: `The role <@&${role.id}> has been added to autoroles.`, ephemeral: true });
+            return interaction.reply({ content: `The role <@&${role.id}> has been added to autoroles.`, flags: 64 });
         }
 
         if (action === 'remove') {
             if (!role) {
-                return interaction.reply({ content: 'You must specify a role to remove.', ephemeral: true });
+                return interaction.reply({ content: 'You must specify a role to remove.', flags: 64 });
             }
 
             if (!data[guildId].includes(role.id)) {
-                return interaction.reply({ content: 'This role is not set as an autorole.', ephemeral: true });
+                return interaction.reply({ content: 'This role is not set as an autorole.', flags: 64 });
             }
 
             data[guildId] = data[guildId].filter(roleId => roleId !== role.id);
             fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 
-            return interaction.reply({ content: `The role <@&${role.id}> has been removed from autoroles.`, ephemeral: true });
+            return interaction.reply({ content: `The role <@&${role.id}> has been removed from autoroles.`, flags: 64 });
         }
     },
 };

@@ -1,6 +1,6 @@
 {
   "name": "discordjs-v14-template",
-  "version": "1.1",
+  "version": "1.2",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -34,6 +34,6 @@
   "dependencies": {
     "discord.js": "^14.19.3",
     "fs": "^0.0.1-security",
-    "superagent": "^10.2.0"
+    "undici": "^7.12.0"
   }
 }

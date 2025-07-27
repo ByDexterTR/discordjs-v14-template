@@ -17,8 +17,7 @@ module.exports = {
           { name: 'WEBP', value: 'webp' },
           { name: 'GIF', value: 'gif' }
         )
-    )
-    .setDMPermission(false),
+    ),
   execute: async (interaction) => {
     const target = interaction.options.getUser('user') || interaction.user;
     const format = interaction.options.getString('format') || 'png';
