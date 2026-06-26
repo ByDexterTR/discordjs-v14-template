@@ -1,10 +1,10 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, MessageFlags, REST, Routes } = require('discord.js');
 const path = require('path');
 const fs = require('fs');
-const config = require(path.join(__dirname, '..', 'config.json'));
+const config = require('../config');
 
 function isOwner(userId) {
-  return config.owner_id && config.owner_id === userId;
+  return config.ownerId && config.ownerId === userId;
 }
 
 module.exports = {
@@ -12,17 +12,19 @@ module.exports = {
     .setName('reload')
     .setDescription('Reloads all commands (Bot owner only)'),
   async execute(interaction) {
-    if (!config.owner_id) {
-      return interaction.reply({ content: 'Bot owner is not configured. Please set owner_id in config.json.', flags: 64 });
+    if (!config.ownerId) {
+      return interaction.reply({ content: 'Bot owner is not configured. Please set OWNER_ID in your .env file.', flags: MessageFlags.Ephemeral });
     }
     if (!isOwner(interaction.user.id)) {
-      return interaction.reply({ content: 'You are not authorized to use this command.', flags: 64 });
+      return interaction.reply({ content: 'You are not authorized to use this command.', flags: MessageFlags.Ephemeral });
     }
+
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const commandsDir = path.join(__dirname);
     const commandFiles = fs.readdirSync(commandsDir).filter(file => file.endsWith('.js') && file !== 'reload.js');
-    let reloaded = [];
-    let failed = [];
+    const reloaded = [];
+    const failed = [];
 
     for (const file of commandFiles) {
       const commandPath = path.join(commandsDir, file);
@@ -37,8 +39,25 @@ module.exports = {
       }
     }
 
+    let deployStatus;
+    try {
+      const body = interaction.client.commands.map(command => command.data.toJSON());
+      const rest = new REST({ version: '10' }).setToken(config.token);
+      if (config.guildId) {
+        await rest.put(Routes.applicationGuildCommands(config.clientId, config.guildId), { body });
+        deployStatus = 'Re-deployed commands to the guild.';
+      } else {
+        await rest.put(Routes.applicationCommands(config.clientId), { body });
+        deployStatus = 'Re-deployed global commands.';
+      }
+    } catch (error) {
+      console.error('Failed to re-deploy commands:', error);
+      deployStatus = '⚠️ Reloaded in memory, but failed to re-deploy to Discord.';
+    }
+
     let reply = `Reloaded commands: ${reloaded.join(', ') || 'None'}`;
     if (failed.length) reply += `\nFailed: ${failed.join(', ')}`;
-    return interaction.reply({ content: reply, flags: 64 });
+    reply += `\n${deployStatus}`;
+    return interaction.editReply({ content: reply });
   }
 };

@@ -1,9 +1,10 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, MessageFlags, InteractionContextType } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('embed')
     .setDescription('Send Embed to the channel')
+    .setContexts(InteractionContextType.Guild)
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
     .addStringOption(option => option.setName('title').setDescription('Enter title').setRequired(true))
     .addStringOption(option => option.setName('description').setDescription('Enter description').setRequired(true))
@@ -20,15 +21,15 @@ module.exports = {
     const channelOption = interaction.options.getChannel('channel') || interaction.channel;
 
     if (thumbnailOption && !isValidUrl(thumbnailOption)) {
-      return interaction.reply({ content: 'Invalid thumbnail URL.', flags: 64 });
+      return interaction.reply({ content: 'Invalid thumbnail URL.', flags: MessageFlags.Ephemeral });
     }
 
     if (imageOption && !isValidUrl(imageOption)) {
-      return interaction.reply({ content: 'Invalid image URL.', flags: 64 });
+      return interaction.reply({ content: 'Invalid image URL.', flags: MessageFlags.Ephemeral });
     }
 
     if (colorOption && !/^#([0-9A-F]{3}){1,2}$/i.test(colorOption) && colorOption !== 'Random') {
-      return interaction.reply({ content: 'Invalid color code. Please provide a valid hex color code (e.g., #ff0000).', flags: 64 });
+      return interaction.reply({ content: 'Invalid color code. Please provide a valid hex color code (e.g., #ff0000).', flags: MessageFlags.Ephemeral });
     }
 
     const Embed = new EmbedBuilder()
@@ -41,7 +42,7 @@ module.exports = {
       .setFooter({ text: interaction.user.username, iconURL: interaction.user.displayAvatarURL() });
 
     await channelOption.send({ embeds: [Embed] });
-    await interaction.reply({ content: `Embed has been sent to ${channelOption}.`, flags: 64 });
+    await interaction.reply({ content: `Embed has been sent to ${channelOption}.`, flags: MessageFlags.Ephemeral });
   },
 };
 

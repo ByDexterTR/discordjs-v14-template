@@ -22,7 +22,7 @@ module.exports = {
     const target = interaction.options.getUser('user') || interaction.user;
     const format = interaction.options.getString('format') || 'png';
 
-    const avatarURL = target.displayAvatarURL({ dynamic: true, size: 4096, extension: format });
+    const avatarURL = target.displayAvatarURL({ size: 4096, extension: format });
 
     const Embed = new EmbedBuilder()
       .setColor('Random')

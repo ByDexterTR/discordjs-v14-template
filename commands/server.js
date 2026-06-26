@@ -1,15 +1,16 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, InteractionContextType } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('server')
-    .setDescription('Shows server information'),
+    .setDescription('Shows server information')
+    .setContexts(InteractionContextType.Guild),
   execute: async (interaction) => {
     const guild = interaction.guild;
 
     const Embed = new EmbedBuilder()
       .setColor('Random')
-      .setThumbnail(guild.iconURL({ dynamic: true, size: 4096 }))
+      .setThumbnail(guild.iconURL({ size: 4096 }))
       .setTitle(`${guild.name}'s Information`)
       .addFields(
         { name: '👑 Owner', value: `<@${guild.ownerId}>`, inline: true },
@@ -26,7 +27,7 @@ module.exports = {
         { name: '📋 Stickers', value: `${guild.stickers.cache.size}`, inline: true },
         { name: '🌍 Locale', value: `${guild.preferredLocale}`, inline: true },
       )
-      .setImage(guild.bannerURL({ dynamic: true, size: 4096 }) || null)
+      .setImage(guild.bannerURL({ size: 4096 }) || null)
       .setTimestamp()
       .setFooter({ text: interaction.user.username, iconURL: interaction.user.displayAvatarURL() });
 
